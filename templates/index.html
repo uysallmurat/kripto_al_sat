@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Kripto AL/SAT Tahmin Sistemi</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            padding: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .control-panel {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .btn-analyze {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: bold;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-analyze:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .card {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: bold;
+        }
+        
+        .signal-buy {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border-radius: 10px;
+            padding: 10px 15px;
+            margin: 5px;
+            display: inline-block;
+        }
+        
+        .signal-sell {
+            background: linear-gradient(45deg, #dc3545, #fd7e14);
+            color: white;
+            border-radius: 10px;
+            padding: 10px 15px;
+            margin: 5px;
+            display: inline-block;
+        }
+        
+        .signal-hold {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            color: white;
+            border-radius: 10px;
+            padding: 10px 15px;
+            margin: 5px;
+            display: inline-block;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .price-display {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .indicator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .indicator-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+        
+        .confidence-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-chart-line"></i> Kripto AL/SAT Tahmin Sistemi</h1>
+                <p class="lead">Yapay Zeka Destekli Kripto Para Analiz Platformu</p>
+            </div>
+            
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="symbolSelect" class="form-label"><i class="fas fa-coins"></i> Kripto Para Seçin</label>
+                        <select class="form-select" id="symbolSelect">
+                            <option value="BTCUSDT">Bitcoin (BTC)</option>
+                            <option value="ETHUSDT">Ethereum (ETH)</option>
+                            <option value="BNBUSDT">Binance Coin (BNB)</option>
+                            <option value="ADAUSDT">Cardano (ADA)</option>
+                            <option value="SOLUSDT">Solana (SOL)</option>
+                            <option value="DOTUSDT">Polkadot (DOT)</option>
+                            <option value="DOGEUSDT">Dogecoin (DOGE)</option>
+                            <option value="AVAXUSDT">Avalanche (AVAX)</option>
+                            <option value="MATICUSDT">Polygon (MATIC)</option>
+                            <option value="LINKUSDT">Chainlink (LINK)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="intervalSelect" class="form-label"><i class="fas fa-clock"></i> Zaman Dilimi</label>
+                        <select class="form-select" id="intervalSelect">
+                            <option value="1h">1 Saat</option>
+                            <option value="4h">4 Saat</option>
+                            <option value="1d">1 Gün</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button class="btn btn-analyze w-100" onclick="analyzeCrypto()">
+                            <i class="fas fa-search"></i> Analiz Et
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Loading -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analiz yapılıyor... Lütfen bekleyin.</p>
+            </div>
+            
+            <!-- Results -->
+            <div id="results" style="display: none;">
+                <!-- Price and Signal -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-dollar-sign"></i> Güncel Fiyat ve Sinyal
+                            </div>
+                            <div class="card-body">
+                                <div class="price-display" id="currentPrice">$0.00</div>
+                                <div class="text-center" id="signalDisplay"></div>
+                                <div class="text-center mt-3" id="confidenceDisplay"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-robot"></i> AI Tahminleri
+                            </div>
+                            <div class="card-body">
+                                <div id="predictionDisplay">
+                                    <p class="text-muted">Analiz sonuçları burada görünecek</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Technical Indicators -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-bar"></i> Teknik Göstergeler
+                    </div>
+                    <div class="card-body">
+                        <div class="indicator-grid" id="indicatorGrid">
+                            <!-- Göstergeler buraya eklenecek -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-line"></i> Fiyat Grafiği
+                    </div>
+                    <div class="card-body">
+                        <div id="priceChart" style="height: 500px;"></div>
+                    </div>
+                </div>
+                
+                <!-- Support/Resistance -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-shield-alt"></i> Destek Seviyeleri
+                            </div>
+                            <div class="card-body">
+                                <div id="supportLevels">
+                                    <p class="text-muted">Destek seviyeleri burada görünecek</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-arrow-up"></i> Direnç Seviyeleri
+                            </div>
+                            <div class="card-body">
+                                <div id="resistanceLevels">
+                                    <p class="text-muted">Direnç seviyeleri burada görünecek</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Global variables
+        let currentData = null;
+        let currentSignals = null;
+        let currentPredictions = null;
+        
+        // Analyze crypto function
+        async function analyzeCrypto() {
+            const symbol = document.getElementById('symbolSelect').value;
+            const interval = document.getElementById('intervalSelect').value;
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        symbol: symbol,
+                        interval: interval
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    alert('Hata: ' + result.error);
+                    return;
+                }
+                
+                // Store data
+                currentData = result.data;
+                currentSignals = result.signals;
+                currentPredictions = result.predictions;
+                
+                // Display results
+                displayResults(result);
+                
+            } catch (error) {
+                console.error('Analiz hatası:', error);
+                alert('Analiz sırasında bir hata oluştu: ' + error.message);
+            } finally {
+                // Hide loading
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+        
+        // Display results
+        function displayResults(result) {
+            document.getElementById('results').style.display = 'block';
+            
+            // Display price and signal
+            displayPriceAndSignal(result.summary);
+            
+            // Display predictions
+            displayPredictions(result.predictions);
+            
+            // Display technical indicators
+            displayTechnicalIndicators(result.summary.technical_summary);
+            
+            // Display support/resistance
+            displaySupportResistance(result.summary.support_resistance);
+            
+            // Create chart
+            createPriceChart(result.data);
+        }
+        
+        // Display price and signal
+        function displayPriceAndSignal(summary) {
+            const priceElement = document.getElementById('currentPrice');
+            const signalElement = document.getElementById('signalDisplay');
+            const confidenceElement = document.getElementById('confidenceDisplay');
+            
+            // Price
+            priceElement.textContent = `$${summary.current_price.toFixed(2)}`;
+            
+            // Signal
+            if (summary.latest_signal) {
+                const signal = summary.latest_signal;
+                let signalClass = 'signal-hold';
+                let signalIcon = 'fas fa-pause';
+                
+                if (signal.type === 'BUY' || signal.type === 'STRONG_BUY') {
+                    signalClass = 'signal-buy';
+                    signalIcon = 'fas fa-arrow-up';
+                } else if (signal.type === 'SELL' || signal.type === 'STRONG_SELL') {
+                    signalClass = 'signal-sell';
+                    signalIcon = 'fas fa-arrow-down';
+                }
+                
+                signalElement.innerHTML = `
+                    <div class="${signalClass}">
+                        <i class="${signalIcon}"></i> ${signal.type}
+                    </div>
+                `;
+                
+                // Confidence
+                confidenceElement.innerHTML = `
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: ${signal.confidence}%"></div>
+                    </div>
+                    <small class="text-muted">Güven: ${signal.confidence.toFixed(1)}%</small>
+                `;
+            }
+        }
+        
+        // Display predictions
+        function displayPredictions(predictions) {
+            const predictionElement = document.getElementById('predictionDisplay');
+            
+            if (predictions.error) {
+                predictionElement.innerHTML = `<p class="text-danger">Tahmin hatası: ${predictions.error}</p>`;
+                return;
+            }
+            
+            if (predictions.ensemble_prediction) {
+                const nextPrediction = predictions.ensemble_prediction[0];
+                const models = predictions.individual_models ? Object.keys(predictions.individual_models) : [];
+                
+                predictionElement.innerHTML = `
+                    <div class="text-center">
+                        <h4>24 Saat Sonraki Tahmin</h4>
+                        <div class="price-display">$${nextPrediction.toFixed(2)}</div>
+                        <p class="text-muted">Kullanılan modeller: ${models.join(', ')}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Display technical indicators
+        function displayTechnicalIndicators(technicalSummary) {
+            const gridElement = document.getElementById('indicatorGrid');
+            
+            if (!technicalSummary) {
+                gridElement.innerHTML = '<p class="text-muted">Teknik göstergeler yüklenemedi</p>';
+                return;
+            }
+            
+            const indicators = [
+                {
+                    name: 'RSI',
+                    value: technicalSummary.rsi?.value?.toFixed(1) || 'N/A',
+                    status: technicalSummary.rsi?.status || 'N/A',
+                    color: getRSIColor(technicalSummary.rsi?.value)
+                },
+                {
+                    name: 'MACD',
+                    value: technicalSummary.macd?.value?.toFixed(4) || 'N/A',
+                    status: technicalSummary.macd?.trend || 'N/A',
+                    color: technicalSummary.macd?.trend === 'Yükseliş' ? '#28a745' : '#dc3545'
+                },
+                {
+                    name: 'Bollinger Bands',
+                    value: technicalSummary.bollinger_bands?.status || 'N/A',
+                    status: technicalSummary.bollinger_bands?.position?.toFixed(2) || 'N/A',
+                    color: '#667eea'
+                }
+            ];
+            
+            gridElement.innerHTML = indicators.map(indicator => `
+                <div class="indicator-item">
+                    <h5>${indicator.name}</h5>
+                    <div style="color: ${indicator.color}; font-size: 1.5rem; font-weight: bold;">
+                        ${indicator.value}
+                    </div>
+                    <small class="text-muted">${indicator.status}</small>
+                </div>
+            `).join('');
+        }
+        
+        // Get RSI color
+        function getRSIColor(rsi) {
+            if (!rsi) return '#6c757d';
+            if (rsi > 70) return '#dc3545'; // Overbought
+            if (rsi < 30) return '#28a745'; // Oversold
+            return '#ffc107'; // Neutral
+        }
+        
+        // Display support/resistance
+        function displaySupportResistance(sr) {
+            const supportElement = document.getElementById('supportLevels');
+            const resistanceElement = document.getElementById('resistanceLevels');
+            
+            if (sr && sr.support_levels) {
+                supportElement.innerHTML = sr.support_levels.map(level => 
+                    `<div class="alert alert-success">$${level.toFixed(2)}</div>`
+                ).join('');
+            }
+            
+            if (sr && sr.resistance_levels) {
+                resistanceElement.innerHTML = sr.resistance_levels.map(level => 
+                    `<div class="alert alert-danger">$${level.toFixed(2)}</div>`
+                ).join('');
+            }
+        }
+        
+        // Create price chart
+        function createPriceChart(data) {
+            if (!data || data.length === 0) return;
+            
+            const dates = data.map(d => d.timestamp || d.index);
+            const prices = data.map(d => d.close);
+            
+            const trace = {
+                x: dates,
+                y: prices,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Fiyat',
+                line: {
+                    color: '#667eea',
+                    width: 2
+                }
+            };
+            
+            const layout = {
+                title: 'Fiyat Grafiği',
+                xaxis: {
+                    title: 'Tarih'
+                },
+                yaxis: {
+                    title: 'Fiyat (USD)'
+                },
+                hovermode: 'x unified'
+            };
+            
+            Plotly.newPlot('priceChart', [trace], layout);
+        }
+        
+        // Auto-analyze on page load
+        window.onload = function() {
+            // Analyze BTC by default
+            setTimeout(analyzeCrypto, 1000);
+        };
+    </script>
+</body>
+</html> 
