@@ -210,7 +210,7 @@ class SignalGenerator:
                 }
             
             # MACD histogramı pozitif ve artıyor
-            elif latest['macd_histogram'] > 0 and latest['macd_histogram'] > previous['macd_histogram']:
+            elif latest['macd_hist'] > 0 and latest['macd_hist'] > previous['macd_hist']:
                 signal = {
                     'type': SignalType.BUY,
                     'strength': SignalStrength.MODERATE,

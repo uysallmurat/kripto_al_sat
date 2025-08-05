@@ -73,12 +73,21 @@ class CryptoAnalyzer:
             signals = self.signal_generator.generate_signals(df_with_indicators, predictions)
             
             # 5. Sonuçları hazırla
+            # DataFrame'i JSON'a çevrilebilir hale getir
+            data_dict = df_with_indicators.reset_index().to_dict('records')
+            
+            # Predictions'ı JSON'a çevrilebilir hale getir
+            predictions_json = self._convert_predictions_to_json(predictions)
+            
+            # Signals'ı JSON'a çevrilebilir hale getir
+            signals_json = self._convert_signals_to_json(signals)
+            
             result = {
                 'symbol': symbol,
                 'interval': interval,
-                'data': df_with_indicators,
-                'predictions': predictions,
-                'signals': signals,
+                'data': data_dict,
+                'predictions': predictions_json,
+                'signals': signals_json,
                 'summary': self._create_summary(df_with_indicators, signals, predictions),
                 'timestamp': datetime.now().isoformat()
             }
@@ -95,12 +104,17 @@ class CryptoAnalyzer:
         try:
             latest = df.iloc[-1]
             
+            # Latest signal'ı JSON'a çevir
+            latest_signal_json = None
+            if signals:
+                latest_signal_json = self._convert_signal_to_json(signals[-1])
+            
             summary = {
                 'current_price': float(latest['close']),
                 'price_change_24h': 0,  # Hesaplanacak
                 'technical_summary': self.technical_indicators.get_indicator_summary(df),
                 'support_resistance': self.technical_indicators.get_support_resistance(df),
-                'latest_signal': signals[-1] if signals else None,
+                'latest_signal': latest_signal_json,
                 'prediction_summary': self._get_prediction_summary(predictions)
             }
             
@@ -133,6 +147,101 @@ class CryptoAnalyzer:
         except Exception as e:
             logger.error(f"Tahmin özeti hatası: {e}")
             return {}
+    
+    def _convert_predictions_to_json(self, predictions: dict) -> dict:
+        """Predictions'ı JSON'a çevrilebilir hale getirir"""
+        try:
+            if not predictions:
+                return {}
+            
+            json_predictions = {}
+            
+            for key, value in predictions.items():
+                if isinstance(value, np.ndarray):
+                    json_predictions[key] = value.tolist()
+                elif isinstance(value, dict):
+                    json_predictions[key] = self._convert_predictions_to_json(value)
+                elif isinstance(value, list):
+                    json_predictions[key] = [
+                        item.tolist() if isinstance(item, np.ndarray) else item 
+                        for item in value
+                    ]
+                elif hasattr(value, '__class__') and 'ARIMA' in str(value.__class__):
+                    # ARIMA model nesnelerini string'e çevir
+                    json_predictions[key] = str(value)
+                elif hasattr(value, 'tolist'):
+                    # NumPy array benzeri nesneler
+                    json_predictions[key] = value.tolist()
+                elif hasattr(value, '__dict__'):
+                    # Diğer nesneleri string'e çevir
+                    json_predictions[key] = str(value)
+                else:
+                    json_predictions[key] = value
+            
+            return json_predictions
+            
+        except Exception as e:
+            logger.error(f"Predictions JSON dönüştürme hatası: {e}")
+            return {}
+    
+    def _convert_signals_to_json(self, signals: list) -> list:
+        """Signals'ı JSON'a çevrilebilir hale getirir"""
+        try:
+            if not signals:
+                return []
+            
+            json_signals = []
+            
+            for signal in signals:
+                json_signal = {}
+                
+                for key, value in signal.items():
+                    if hasattr(value, 'value'):  # Enum değerleri
+                        json_signal[key] = value.value
+                    elif isinstance(value, datetime):
+                        json_signal[key] = value.isoformat()
+                    elif isinstance(value, list):
+                        json_signal[key] = [
+                            item.value if hasattr(item, 'value') else item 
+                            for item in value
+                        ]
+                    else:
+                        json_signal[key] = value
+                
+                json_signals.append(json_signal)
+            
+            return json_signals
+            
+        except Exception as e:
+            logger.error(f"Signals JSON dönüştürme hatası: {e}")
+            return []
+    
+    def _convert_signal_to_json(self, signal: dict) -> dict:
+        """Tek bir signal'ı JSON'a çevrilebilir hale getirir"""
+        try:
+            if not signal:
+                return {}
+            
+            json_signal = {}
+            
+            for key, value in signal.items():
+                if hasattr(value, 'value'):  # Enum değerleri
+                    json_signal[key] = value.value
+                elif isinstance(value, datetime):
+                    json_signal[key] = value.isoformat()
+                elif isinstance(value, list):
+                    json_signal[key] = [
+                        item.value if hasattr(item, 'value') else item 
+                        for item in value
+                    ]
+                else:
+                    json_signal[key] = value
+            
+            return json_signal
+            
+        except Exception as e:
+            logger.error(f"Signal JSON dönüştürme hatası: {e}")
+            return {}
 
 # Global analyzer instance
 analyzer = CryptoAnalyzer()
@@ -158,9 +267,14 @@ def analyze():
         
         # Global değişkenleri güncelle
         global current_data, current_signals, current_predictions
-        current_data = result['data']
         current_signals = result['signals']
         current_predictions = result['predictions']
+        
+        # DataFrame'i global değişkende sakla (sadece son 100 veri)
+        if 'data' in result and result['data']:
+            # JSON'dan DataFrame'e geri çevir
+            df_data = pd.DataFrame(result['data'])
+            current_data = df_data.tail(100)  # Son 100 veriyi sakla
         
         return jsonify(result)
         
