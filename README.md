@@ -78,8 +78,8 @@
 
 ### Adım 1: Repository'yi Klonlayın
 ```bash
-git clone https://github.com/kullaniciadi/kripto-al-sat.git
-cd kripto-al-sat
+git clone https://github.com/uysallmurat/kripto_al_sat.git
+cd kripto_al_sat
 ```
 
 ### Adım 2: Sanal Ortam Oluşturun
@@ -222,6 +222,8 @@ kripto-al-sat/
 - Finansal tavsiye niteliği taşımaz
 - Yatırım kararlarınızda dikkatli olun
 - Risk yönetimi kurallarına uyun
+- **Proje Durumu:** ✅ Tamamen çalışır durumda
+- **Son Güncelleme:** 6 Ağustos 2025
 
 ## 📄 Lisans
 
@@ -229,9 +231,8 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 
 ## 📞 İletişim
 
-- **Proje Sahibi:** [Adınız]
-- **Email:** [email@example.com]
-- **GitHub:** [github.com/kullaniciadi]
+- **Proje Sahibi:** Murat Uysal
+- **GitHub:** [github.com/uysallmurat](https://github.com/uysallmurat)
 
 ## 🙏 Teşekkürler
 

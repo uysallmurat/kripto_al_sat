@@ -39,6 +39,9 @@
 - [x] Web arayüz temel yapısı kuruldu (HTML, React veya Flask)
 - [x] Coin seçimi dinamik hale getirildi
 - [x] Veri çekme ve grafik otomasyonu sağlandı (periyodik güncelleme)
+- [x] JSON serialization hataları çözüldü
+- [x] Flask API endpoints tamamlandı
+- [x] Web arayüzü tamamen çalışır durumda
 
 ## 📱 H. Mobil Uyum ve Bildirim Sistemi (opsiyonel)
 - [ ] Arayüz mobil uyumlu hale getirildi (responsive)
@@ -50,6 +53,7 @@
 - [ ] Strateji karşılaştırma ve optimizasyon ekranı geliştirildi
 
 ## ☁️ J. Yayınlama ve Güvenlik
+- [x] Proje GitHub'a yüklendi ve versiyon kontrolü sağlandı
 - [ ] Proje sunucuya deploy edildi (AWS, Railway, Vercel vb.)
 - [ ] API güvenliği ve şifreleme önlemleri alındı
 - [ ] Otomatik veri yenileme ve hata loglama sistemi kuruldu
